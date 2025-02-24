@@ -1,58 +1,84 @@
+/*
+Copyright (c) 2017 Matteo Merola
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package me.matteomerola.codicefiscale;
+
+import lombok.experimental.UtilityClass;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
 
+@UtilityClass
 public class CityParser {
 
-	private static String DB_NAME = "dbcf.csv";
-	private static InputStream INPUT = CityParser.class
-			.getClassLoader().getResourceAsStream(DB_NAME);
-	private static BufferedReader READER = new BufferedReader(
-			new InputStreamReader(INPUT));
-	private static List<City> CITY_DB;
+    private static final Map<String, City> CITIES = new HashMap<>();
 
-	private static List<City> parse() {
-		List<City> cities = new ArrayList<>();
-		String line;
-		try {
-			line = READER.readLine();
-		} catch (IOException e) {
-			e.printStackTrace();
-			return cities;
-		}
-		while (line != null) {
-			try {
-				StringTokenizer tokenizer = new StringTokenizer(line, ";");
-				String name = tokenizer.nextToken();
-				String province = tokenizer.nextToken();
-				String fiscalCode = tokenizer.nextToken();
-				City city = new City(name, province, fiscalCode);
-				cities.add(city);
-				line = READER.readLine();
-			} catch (IOException e) {
-				e.printStackTrace();
-				return cities;
-			}
-		}
-		return cities;
-	}
+    public static void init() {
+        try (final InputStream INPUT = CityParser.class.getClassLoader().getResourceAsStream("gi_comuni.csv");
+             final BufferedReader READER = new BufferedReader(new InputStreamReader(INPUT))) {
 
-	/**
-	* This method returns the list of city that are into the database.
-	* @param refresh A boolean value indicating whether or not to parse again the cvs database.
-	* @return A List of City.
-	*/
-	public static List<City> getCityDb(boolean refresh) {
-		if (CITY_DB == null || refresh) {
-			CITY_DB = parse();
-		}
-		return CITY_DB;
-	}
+            List<String> lines = READER.lines().skip(1).toList();
+            for (String line : lines) {
+                StringTokenizer st = new StringTokenizer(line, ";");
 
+                String name = st.nextToken().replaceAll("\"", "");
+
+                String alias = st.nextToken().replaceAll("\"", "");
+                List<String> aliases = List.of(alias.split("\\/"));
+
+                String province = st.nextToken();
+                String code = st.nextToken();
+
+                City city = new City(name, aliases, province, code);
+                CITIES.put(code, city);
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e); // TODO: aggiungere info su errore nel caricamento del city parser
+        }
+    }
+
+    public City getCity(String code) {
+        return CITIES.getOrDefault(code, null);
+    }
+
+    public City getByName(final String name) {
+        if (name == null) return null;
+
+        for (Map.Entry<String, City> m : CITIES.entrySet())
+            if (m.getValue().getName().equalsIgnoreCase(name)) return m.getValue();
+
+        return null;
+    }
+
+    public boolean isCityInDB(String name) {
+        return CITIES.containsValue(getByName(name));
+    }
+
+    public boolean isCityInDB(final City city) {
+        return CITIES.containsValue(city);
+    }
+
+
+    public Set<City> getCities() {
+        return new HashSet<>(CITIES.values());
+    }
 }

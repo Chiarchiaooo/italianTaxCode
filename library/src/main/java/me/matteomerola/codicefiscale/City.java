@@ -1,69 +1,68 @@
+/*
+Copyright (c) 2017 Matteo Merola
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package me.matteomerola.codicefiscale;
 
+
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+@Getter
+@Setter
 public class City {
 
-	private String name;
-	private String prov;
-	private String code;
+    private final String code;
 
-	public City(String name, String prov, String code) {
-		this.name = name;
-		this.prov = prov;
-		this.code = code;
-	}
+    private String name;
+    private List<String> alias;
+    private String prov;
 
-	public String getName() {
-		return name;
-	}
+    public City(String name, List<String> alias, String prov, String code) {
+        this.name = (name == null) ? "" : name;
+        this.alias = (alias == null) ? new ArrayList<>() : alias.stream().filter(a -> a != null && !a.isEmpty() && !a.equals(name)).toList();
+        this.prov = (prov == null) ? "" : prov;
+        this.code = (code == null) ? "" : code;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
 
-	public String getProv() {
-		return prov;
-	}
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        City city = (City) o;
 
-	public void setProv(String prov) {
-		this.prov = prov;
-	}
+        return Objects.equals(name, city.name) && Objects.equals(prov, city.prov) && Objects.equals(code, city.code);
+    }
 
-	public String getCode() {
-		return code;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, prov, code);
+    }
 
-	public void setCode(String code) {
-		this.code = code;
-	}
+    @Override
+    public String toString() {
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((code == null) ? 0 : code.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		City other = (City) obj;
-		if (code == null) {
-			if (other.code != null)
-				return false;
-		} else if (!code.equals(other.code))
-			return false;
-		return true;
-	}
-
-	@Override
-	public String toString() {
-		return "" + name + " (" + prov + ") " + code;
-	}
+        final String aliases = alias.isEmpty() ? "" : "/" + String.join("/", alias);
+        return name + aliases + " (" + prov + ") " + code;
+    }
 
 }
