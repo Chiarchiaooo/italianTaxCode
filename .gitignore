@@ -1,6 +1,9 @@
 
 # Created by https://www.gitignore.io/api/maven,gradle,intellij,android,java,code-java,linux,macos,windows
 
+
+.idea/
+
 ### Android ###
 # Built application files
 *.apk
